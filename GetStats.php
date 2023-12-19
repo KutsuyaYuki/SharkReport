@@ -1,12 +1,25 @@
 <?php
+/**
+ * Class for handling settings and functionality related to Shark Reports in WordPress admin.
+ *
+ * Provides options and actions for generating sales reports in WooCommerce. 
+ * Also includes methods for adding cron jobs, registering settings, and more.
+ *
+ */
 class SharkGetStats {
     
     public function __construct(){
     }
 
     /**
-     * Sets the weekly cron job
-     */ 
+     * Calculate all actions for the shark on a weekly basis.
+     *
+     * This function retrieves the current day and prevents the function from being executed twice within 60 seconds.
+     * It then calculates the start and end dates for the previous week and retrieves the report emails.
+     * Finally, it calls the `Shark_getOrders` method to perform the necessary calculations and exits.
+     *
+     * @throws Some_Exception_Class This function does not throw any exceptions.
+     */
     public function shark_calc_all_action_weekly() {
         // Supposed to prevent the function from being executed twice in 60 seconds.
         if ( get_transient( 'shark_calc_all_action_weekly_semaphore' ) ) return;
@@ -22,6 +35,14 @@ class SharkGetStats {
         exit();
     }
 
+    /**
+     * Calculate all actions for the shark on a weekly basis.
+     * 
+     * This function retrieves the current day and prevents the function from being executed twice within 60 seconds.
+     * It then calculates the start and end dates for the previous week and retrieves the report emails.
+     * Finally, it calls the `Shark_getOrders` method to perform the necessary calculations and exits.
+     * 
+     */
     public function shark_calc_all_action_weekly_now() {
         // Supposed to prevent the function from being executed twice in 60 seconds.
         if ( get_transient( 'shark_calc_all_action_weekly_semaphore' ) ) return;
@@ -46,8 +67,16 @@ class SharkGetStats {
     }
 
     /**
-     * Sets the monthly cron job
-     */ 
+     * Calculate shark action monthly.
+     *
+     * This function calculates the shark action monthly. It is triggered on the first day of each month.
+     * It prevents the function from being executed twice in 60 seconds by using a transient semaphore.
+     * The function retrieves the start and end date of the last month and the report emails from the options.
+     * It then calls the Shark_getOrders method to perform some calculations based on the given dates and emails.
+     * Finally, it exits the current script execution.
+     *
+     * @return void
+     */
     public function shark_calc_all_action_monthly() {
         $now = strtotime("now");
         // Get current day in int
@@ -68,6 +97,15 @@ class SharkGetStats {
 	    }
     }
 
+    /**
+     * Calculate all actions for the shark on a monthly basis.
+     *
+     * This function retrieves the current day and prevents the function from being executed twice within 60 seconds.
+     * It then calculates the start and end dates for the previous month and retrieves the report emails.
+     * Finally, it calls the `Shark_getOrders` method to perform the necessary calculations and exits.
+     *
+     * @throws Some_Exception_Class This function does not throw any exceptions.
+     */
     public function shark_calc_all_action_monthly_now() {
     $now = strtotime("now");    // Get current day in int
     $this_day = date('j');
@@ -85,6 +123,12 @@ class SharkGetStats {
         exit();
     }
 
+    /**
+     * Calculate all actions for the shark.
+     * 
+     * This function calls the `Shark_getOrders` method to perform the necessary calculations and exits.
+     * 
+     */
     public function shark_calc_all_action() {
         if ( isset ( $_GET['date-start'] ) ){
             $report_emails = explode(",", $_GET['report-emails-aangepast-name']);
@@ -134,6 +178,7 @@ class SharkGetStats {
                     $coupons = array_merge($coupons, $order->get_coupons());
                     }
                 // Get the data per order line
+                
                 foreach($order->get_items() as $order_line) {
                     $item_data = $order_line->get_data();
                     $product_name = $item_data['name'];

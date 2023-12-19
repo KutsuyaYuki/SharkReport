@@ -70,7 +70,7 @@ function shark_admin_notice() {
                             <label for="report-emails-id">Emails Weekly:</label>
                         </td>
                         <td>
-                            <input type="textarea" required pattern="^(([^\@\.\,])+@{1}([^\@\,])+,?)+([^,])$" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-weekly-id" name="report-emails-weekly-name" value="<?php echo get_option('report-emails-weekly-name'); //Gets setting from DB ?>">
+                            <input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-weekly-id" name="report-emails-weekly-name" value="<?php echo get_option('report-emails-weekly-name'); //Gets setting from DB ?>">
                         </td>
                     </tr>
                     <tr>
@@ -78,7 +78,7 @@ function shark_admin_notice() {
                             <label for="report-emails-id">Emails Monthly:</label>
                         </td>
                         <td>
-                            <input type="textarea" required pattern="^(([^\@\.\,])+@{1}([^\@\,])+,?)+([^,])$" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-monthly-id" name="report-emails-monthly-name" value="<?php echo get_option('report-emails-monthly-name'); //Gets setting from DB ?>">
+                            <input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-monthly-id" name="report-emails-monthly-name" value="<?php echo get_option('report-emails-monthly-name'); //Gets setting from DB ?>">
                         </td>
                     </tr>
                 </table>
@@ -98,7 +98,7 @@ function shark_admin_notice() {
 						<label for="report-emails-aangepast-id">Emails Aangepast:</label>
 					</td>
 					<td>
-						<input type="textarea" required pattern="^(([^\@\.\,])+@{1}([^\@\,])+,?)+([^,])$" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-aangepast-id" name="report-emails-aangepast-name" value="<?php echo get_option('report-emails-aangepast-name'); //Gets setting from DB ?>">
+						<input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-aangepast-id" name="report-emails-aangepast-name" value="<?php echo get_option('report-emails-aangepast-name'); //Gets setting from DB ?>">
 					</td>
 				</tr>
                 <tr>
