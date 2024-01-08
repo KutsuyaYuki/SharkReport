@@ -139,7 +139,137 @@ class SharkGetStats {
         }
     }
 
+    public function Shark_listAllProductsAndCategories() {
+        // Retrieve all published products.
+        $args = array(
+            'status' => 'publish',
+            'limit'  => -1,
+            'return' => 'objects',
+        );
+    
+        $products = wc_get_products($args);
+        $category_tree = [];
+    
+        // First, build a category tree.
+        foreach ($products as $product) {
+            // Get product ID, name and its categories.
+            $product_name = $product->get_name();
+            $categories_terms = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'all'));
+    
+            foreach ($categories_terms as $term) {
+                if (!array_key_exists($term->name, $category_tree)) {
+                    $category_tree[$term->name] = [];
+                }
+    
+                // Avoid duplicating product names within the same category.
+                if(!in_array($product_name, $category_tree[$term->name])){
+                    array_push($category_tree[$term->name], htmlspecialchars_decode($product_name));
+                }
+    
+                // Additionally handle parent-child relationships if any sub-categories exist.
+                while ($term->parent != 0 && ($parent_term = get_term_by('id', $term->parent, 'product_cat'))) {
+                    if (!isset($category_tree[$parent_term->name][$term->name])) {
+                        // Initialize sub-category with empty array or keep existing products
+                        $category_tree[$parent_term->name][$term->name] =&$category_tree[$term->name];
+                    }
+                    $term =&$parent_term;
+                }
+            }
+        }
+    
+        // Now format this data into desired string representation.
+    
+        ob_start();  // Start capturing the echoed output
+    
+        echo PHP_EOL;   // Prepend new line for better readability
+    
+        foreach ($category_tree as $cat_name => &$subcats_or_products) {
+    
+            echo "{$cat_name}" . PHP_EOL;
+    
+            if (is_array($subcats_or_products)) {
+    
+                foreach ($subcats_or_products as $_subCatName => $_productsOrSubcatArray) {
+    
+                    if (is_array($_productsOrSubcatArray)){
+    
+                        echo "— {$_subCatName}" . PHP_EOL;
+    
+                        foreach ($_productsOrSubcatArray as &$_productName){
+                            echo "—— {$_productName}" . PHP_EOL;
+    
+                            unset($_productName);  // Unset reference after usage to avoid potential issues on next iteration
+                        }
+    
+                    } else{
+                        echo "— {$_productsOrSubcatArray}" . PHP_EOL;
+                    }
+    
+                    unset($_productsOrSubcatArray);  // Unset reference after usage to avoid potential issues on next iteration
+    
+               }
+           } else{
+    
+               echo "— {$subcats_or_products}" . PHP_EOL;
+           }
+    
+           unset($subcats_or_products);   // Unset reference after usage to avoid potential issues on next iteration
+    
+       }
+    
+       return ob_get_clean();   // Return captured content and stop capturing
+    }
+    
+
+    public function Shark_dumpAllProductCategories() {
+        // Retrieve all terms in the 'product_cat' taxonomy including empty.
+        $all_categories = get_terms(array(
+            'taxonomy' => 'product_cat',
+            'hide_empty' => false,
+            'parent'   => 0
+        ));
+    
+        // Function to recursively show category and its children.
+        $print_category_tree = function($categories, $depth = 0) use (&$print_category_tree) {
+            foreach ($categories as $category) {
+                // Print category name with indentation based on depth.
+                echo str_repeat('— ', $depth) . $category->name . PHP_EOL;
+    
+                // Get child categories.
+                $child_categories = get_terms(array(
+                    'taxonomy' => 'product_cat',
+                    'hide_empty' => false,
+                    'parent'   => $category->term_id
+                ));
+    
+                if (!empty($child_categories)) {
+                    // If child categories are found, recurse into them and increase depth for indentation.
+                    $print_category_tree($child_categories, $depth + 1);
+                }
+            }
+        };
+    
+        ob_start();  // Start buffering output
+        echo '<pre>';
+    
+        // Call recursive print with parent categories only (top level).
+        $print_category_tree($all_categories);
+    
+        echo '</pre>';
+    
+        // Get buffered content and clean buffer
+        $output = ob_get_clean();
+    
+        var_dump($output);  // Dump output which includes both parents and their children properly indented.
+    }
+    
+    
+    
+
     public function Shark_getOrders($date_start, $date_end, $report_emails){
+        $this->Shark_dumpAllProductCategories();
+        $this->Shark_listAllProductsAndCategories();
+
         //echo("Shark_getOrders got called");
         /**
         * Check if WooCommerce is active
@@ -358,15 +488,15 @@ class SharkGetStats {
 
             // Disable this to get log
             //-------------------------
-            wp_safe_redirect(
-                    // Retrieves the site url for the current site.
-                    add_query_arg( 
-                        array( 
-                            'success' => '1'
-                        ), 
-                        site_url( '/wp-admin/admin.php?page=shark-report' )
-                )
-            );
+            // wp_safe_redirect(
+            //         // Retrieves the site url for the current site.
+            //         add_query_arg( 
+            //             array( 
+            //                 'success' => '1'
+            //             ), 
+            //             site_url( '/wp-admin/admin.php?page=shark-report' )
+            //     )
+            // );
             exit();
             
             die;
