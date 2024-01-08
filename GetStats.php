@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class for handling settings and functionality related to Shark Reports in WordPress admin.
  *
@@ -6,9 +7,11 @@
  * Also includes methods for adding cron jobs, registering settings, and more.
  *
  */
-class SharkGetStats {
-    
-    public function __construct(){
+class SharkGetStats
+{
+
+    public function __construct()
+    {
     }
 
     /**
@@ -20,18 +23,19 @@ class SharkGetStats {
      *
      * @throws Some_Exception_Class This function does not throw any exceptions.
      */
-    public function shark_calc_all_action_weekly() {
+    public function shark_calc_all_action_weekly()
+    {
         // Supposed to prevent the function from being executed twice in 60 seconds.
-        if ( get_transient( 'shark_calc_all_action_weekly_semaphore' ) ) return;
-        set_transient( 'shark_calc_all_action_weekly_semaphore', true, 60);
+        if (get_transient('shark_calc_all_action_weekly_semaphore')) return;
+        set_transient('shark_calc_all_action_weekly_semaphore', true, 60);
 
         $date_start = date('Y-m-d', strtotime('last week Monday'));
         $date_end = date('Y-m-d', strtotime('last week Sunday'));
-        
+
         $report_emails = explode(",", get_option('report-emails-weekly-name'));
 
         $this->Shark_getOrders($date_start, $date_end, $report_emails);
-            
+
         exit();
     }
 
@@ -43,26 +47,27 @@ class SharkGetStats {
      * Finally, it calls the `Shark_getOrders` method to perform the necessary calculations and exits.
      * 
      */
-    public function shark_calc_all_action_weekly_now() {
+    public function shark_calc_all_action_weekly_now()
+    {
         // Supposed to prevent the function from being executed twice in 60 seconds.
-        if ( get_transient( 'shark_calc_all_action_weekly_semaphore' ) ) return;
-        set_transient( 'shark_calc_all_action_weekly_semaphore', true, 60);
+        if (get_transient('shark_calc_all_action_weekly_semaphore')) return;
+        set_transient('shark_calc_all_action_weekly_semaphore', true, 60);
 
         $previous_week = strtotime("-1 week +1 day");
 
-        $start_week = strtotime("last monday midnight",$previous_week);
-        $end_week = strtotime("next sunday",$start_week);
+        $start_week = strtotime("last monday midnight", $previous_week);
+        $end_week = strtotime("next sunday", $start_week);
 
-        $start_week = date("Y-m-d",$start_week);
-        $end_week = date("Y-m-d",$end_week);
+        $start_week = date("Y-m-d", $start_week);
+        $end_week = date("Y-m-d", $end_week);
 
         $date_start = date('Y-m-d', strtotime('last week Monday'));
         $date_end = date('Y-m-d', strtotime('last week Sunday'));
-        
+
         $report_emails = explode(",", get_option('report-emails-weekly-name'));
 
         $this->Shark_getOrders($start_week, $end_week, $report_emails);
-            
+
         exit();
     }
 
@@ -77,24 +82,25 @@ class SharkGetStats {
      *
      * @return void
      */
-    public function shark_calc_all_action_monthly() {
+    public function shark_calc_all_action_monthly()
+    {
         $now = strtotime("now");
         // Get current day in int
         $this_day = date('j');
         if ($this_day == 1) {
             // Supposed to prevent the function from being executed twice in 60 seconds.
-            if ( get_transient( 'shark_calc_all_action_monthly_semaphore' ) ) return;
-            set_transient( 'shark_calc_all_action_monthly_semaphore', true, 60);
+            if (get_transient('shark_calc_all_action_monthly_semaphore')) return;
+            set_transient('shark_calc_all_action_monthly_semaphore', true, 60);
 
             $date_start = date('Y-m-d', strtotime('first day of last month'));
             $date_end = date('Y-m-d', strtotime('last day of last month'));
-            
+
             $report_emails = explode(",", get_option('report-emails-monthly-name'));
 
             $this->Shark_getOrders($date_start, $date_end, $report_emails);
-            
+
             exit();
-	    }
+        }
     }
 
     /**
@@ -106,20 +112,21 @@ class SharkGetStats {
      *
      * @throws Some_Exception_Class This function does not throw any exceptions.
      */
-    public function shark_calc_all_action_monthly_now() {
-    $now = strtotime("now");    // Get current day in int
-    $this_day = date('j');
+    public function shark_calc_all_action_monthly_now()
+    {
+        $now = strtotime("now");    // Get current day in int
+        $this_day = date('j');
         // Supposed to prevent the function from being executed twice in 60 seconds.
-        if ( get_transient( 'shark_calc_all_action_monthly_semaphore' ) ) return;
-        set_transient( 'shark_calc_all_action_monthly_semaphore', true, 60);
+        if (get_transient('shark_calc_all_action_monthly_semaphore')) return;
+        set_transient('shark_calc_all_action_monthly_semaphore', true, 60);
 
         $date_start = date('Y-m-d', strtotime('first day of last month'));
         $date_end = date('Y-m-d', strtotime('last day of last month'));
-        
+
         $report_emails = explode(",", get_option('report-emails-monthly-name'));
 
         $this->Shark_getOrders($date_start, $date_end, $report_emails);
-        
+
         exit();
     }
 
@@ -129,272 +136,272 @@ class SharkGetStats {
      * This function calls the `Shark_getOrders` method to perform the necessary calculations and exits.
      * 
      */
-    public function shark_calc_all_action() {
-        if ( isset ( $_GET['date-start'] ) ){
+    public function shark_calc_all_action()
+    {
+        if (isset($_GET['date-start'])) {
             $report_emails = explode(",", $_GET['report-emails-aangepast-name']);
             $this->Shark_getOrders($_GET['date-start'], $_GET['date-end'], $report_emails);
             $url = admin_url('admin.php?page=shark-report');
-            
-            exit();    
+
+            exit();
         }
     }
 
-    public function Shark_listAllProductsAndCategories() {
+    public function Shark_listAllProductsAndCategories()
+    {
         // Retrieve all published products.
         $args = array(
             'status' => 'publish',
             'limit'  => -1,
             'return' => 'objects',
         );
-    
+
         $products = wc_get_products($args);
         $category_tree = [];
-    
+
         // First, build a category tree.
         foreach ($products as $product) {
             // Get product ID, name and its categories.
             $product_name = $product->get_name();
             $categories_terms = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'all'));
-    
+
             foreach ($categories_terms as $term) {
                 if (!array_key_exists($term->name, $category_tree)) {
                     $category_tree[$term->name] = [];
                 }
-    
+
                 // Avoid duplicating product names within the same category.
-                if(!in_array($product_name, $category_tree[$term->name])){
+                if (!in_array($product_name, $category_tree[$term->name])) {
                     array_push($category_tree[$term->name], htmlspecialchars_decode($product_name));
                 }
-    
+
                 // Additionally handle parent-child relationships if any sub-categories exist.
                 while ($term->parent != 0 && ($parent_term = get_term_by('id', $term->parent, 'product_cat'))) {
                     if (!isset($category_tree[$parent_term->name][$term->name])) {
                         // Initialize sub-category with empty array or keep existing products
-                        $category_tree[$parent_term->name][$term->name] =&$category_tree[$term->name];
+                        $category_tree[$parent_term->name][$term->name] = &$category_tree[$term->name];
                     }
-                    $term =&$parent_term;
+                    $term = &$parent_term;
                 }
             }
         }
-    
+
         // Now format this data into desired string representation.
-    
+
         ob_start();  // Start capturing the echoed output
-    
+
         echo PHP_EOL;   // Prepend new line for better readability
-    
+
         foreach ($category_tree as $cat_name => &$subcats_or_products) {
-    
+
             echo "{$cat_name}" . PHP_EOL;
-    
+
             if (is_array($subcats_or_products)) {
-    
+
                 foreach ($subcats_or_products as $_subCatName => $_productsOrSubcatArray) {
-    
-                    if (is_array($_productsOrSubcatArray)){
-    
+
+                    if (is_array($_productsOrSubcatArray)) {
+
                         echo "— {$_subCatName}" . PHP_EOL;
-    
-                        foreach ($_productsOrSubcatArray as &$_productName){
+
+                        foreach ($_productsOrSubcatArray as &$_productName) {
                             echo "—— {$_productName}" . PHP_EOL;
-    
+
                             unset($_productName);  // Unset reference after usage to avoid potential issues on next iteration
                         }
-    
-                    } else{
+                    } else {
                         echo "— {$_productsOrSubcatArray}" . PHP_EOL;
                     }
-    
-                    unset($_productsOrSubcatArray);  // Unset reference after usage to avoid potential issues on next iteration
-    
-               }
-           } else{
-    
-               echo "— {$subcats_or_products}" . PHP_EOL;
-           }
-    
-           unset($subcats_or_products);   // Unset reference after usage to avoid potential issues on next iteration
-    
-       }
-    
-       return ob_get_clean();   // Return captured content and stop capturing
-    }
-    
 
-    public function Shark_dumpAllProductCategories() {
+                    unset($_productsOrSubcatArray);  // Unset reference after usage to avoid potential issues on next iteration
+
+                }
+            } else {
+
+                echo "— {$subcats_or_products}" . PHP_EOL;
+            }
+
+            unset($subcats_or_products);   // Unset reference after usage to avoid potential issues on next iteration
+
+        }
+
+        return ob_get_clean();   // Return captured content and stop capturing
+    }
+
+
+    public function Shark_dumpAllProductCategories()
+    {
         // Retrieve all terms in the 'product_cat' taxonomy including empty.
         $all_categories = get_terms(array(
             'taxonomy' => 'product_cat',
             'hide_empty' => false,
             'parent'   => 0
         ));
-    
+
         // Function to recursively show category and its children.
-        $print_category_tree = function($categories, $depth = 0) use (&$print_category_tree) {
+        $print_category_tree = function ($categories, $depth = 0) use (&$print_category_tree) {
             foreach ($categories as $category) {
                 // Print category name with indentation based on depth.
                 echo str_repeat('— ', $depth) . $category->name . PHP_EOL;
-    
+
                 // Get child categories.
                 $child_categories = get_terms(array(
                     'taxonomy' => 'product_cat',
                     'hide_empty' => false,
                     'parent'   => $category->term_id
                 ));
-    
+
                 if (!empty($child_categories)) {
                     // If child categories are found, recurse into them and increase depth for indentation.
                     $print_category_tree($child_categories, $depth + 1);
                 }
             }
         };
-    
+
         ob_start();  // Start buffering output
         echo '<pre>';
-    
+
         // Call recursive print with parent categories only (top level).
         $print_category_tree($all_categories);
-    
+
         echo '</pre>';
-    
+
         // Get buffered content and clean buffer
         $output = ob_get_clean();
-    
+
         var_dump($output);  // Dump output which includes both parents and their children properly indented.
     }
-    
-    
-    
 
-    public function Shark_getOrders($date_start, $date_end, $report_emails){
+
+
+
+
+    public function Shark_getOrders($dateStart, $dateEnd, $reportEmails)
+    {
+        // Initiate product categories dump
         $this->Shark_dumpAllProductCategories();
+
+        // List all products and categories
         $this->Shark_listAllProductsAndCategories();
 
-        //echo("Shark_getOrders got called");
-        /**
-        * Check if WooCommerce is active
-        **/
-        if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
-
-            $shark_report_options = get_option( 'shark_report_option_name' );
-
-            // Get all orders from woocommeSrce between date period
-            $orders = wc_get_orders( array(
+        // Check if WooCommerce is active
+        if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
+            // Get all orders from WooCommerce between date period
+            $orders = wc_get_orders(array(
                 'limit' => -1,
-                'date_created' => $date_start.'...'.$date_end,
+                'date_created' => "$dateStart...$dateEnd",
                 'status' => array('wc-processing', 'wc-completed', 'wc-on-hold', 'wc-pending'),
-            ) );
+            ));
 
-            // $args = array(
-            //     'limit' => -1,
-            //     'date_completed' => $date_start.'...'.$date_end,
-            // );
-            // $orders = wc_get_orders( $args );
-            
-            $order_lines_data = array();
-            $total_shipping = 0;
+            // Define variables to collect order data
+            $orderLinesData = array();
+            $totalShipping = 0;
+            $quantityAll = 0;
+            $totalExBtw = 0;
+            $totalBtw = 0;
+            $totalInclBtw = 0;
+            $coupons = array();
+
+
+            // Added: Initialize these variables before using them
+            $result = array();
             $quantity_all = 0;
             $total_ex_btw = 0;
             $total_btw = 0;
             $total_incl_btw = 0;
-            $coupons = array();
-
             var_dump(count($orders));
-            foreach ($orders as $order_id) { // Get all order ids
-                $order = wc_get_order($order_id); // Get the order by id
-                $total_shipping = $order->get_shipping_total() + $total_shipping;
-                $order_date = $order->get_date_created();
+
+            foreach ($orders as $orderId) {
+                $order = wc_get_order($orderId); // Get the order by id
+                $totalShipping = $order->get_shipping_total() + $totalShipping;
+                $orderDate = $order->get_date_created();
                 if ($order->get_coupons()) {
                     $coupons = array_merge($coupons, $order->get_coupons());
-                    }
+                }
                 // Get the data per order line
-                
-                foreach($order->get_items() as $order_line) {
-                    $item_data = $order_line->get_data();
-                    $product_name = $item_data['name'];
-                    $quantity = $item_data['quantity'];
-                    //$line_total = $item_data['total'];
-                    $line_total = $order_line->get_subtotal();
-                    $line_total_btw = $order_line->get_subtotal_tax();
+                foreach ($order->get_items() as $orderLine) {
+                    $itemData = $orderLine->get_data();
+                    $productName = $itemData['name'];
+                    $quantity = $itemData['quantity'];
+                    $lineTotal = $orderLine->get_subtotal();
+                    $lineTotalBtw = $orderLine->get_subtotal_tax();
 
-                    // Get an instance of the WC_Product object (can be a product variation too)
-                    $product = $order_line->get_product();
-                    //var_dump($order_line);
+                    // Instance of the WC_Product object
+                    $product = $orderLine->get_product();
 
-                    if($product){
-                        // Special code to get the categories of the product of the order line
-                        $categories = get_the_terms($order_line->get_product_id(), 'product_cat');
-    
-                        // Get the product description (works for product variation too)
-                        $description = "";
-                        if ($product) {
-                            $description = $product->get_description();
-                        }
-                        
-                        // CHANGE ON 2 DECEMBER 2022, since adding the multiple categories adds up the Quantity,
-                        // We will for now take the first category
+                    if ($product) {
+                        $afdeling = $product->get_attribute("Afdeling");
+
+                        // Fetch product categories
+                        $categories = get_the_terms($orderLine->get_product_id(), 'product_cat');
+
+                        // Fetch product description
+                        $description = $product ? $product->get_description() : "";
+
+                        // If product belongs to one or more categories, take the first one
                         if (count($categories) >= 1) {
-                            $seperate_category = $categories[0];
+                            $separateCategory = $categories[0];
 
+                            // Information of item category-wise
                             $itemCat = array(
-                                "Category" => $seperate_category->name,
-                                "CategoryID" => $seperate_category->term_id,
-                                "Name" => $product_name,
+                                "Category" => $separateCategory->name,
+                                "CategoryID" => $separateCategory->term_id,
+                                "Afdeling" => $afdeling,
+                                "Name" => $productName,
                                 "Description" => $description,
                                 "Quantity" => $quantity,
-                                "Total" => $line_total,
-                                "Total_btw" => $line_total_btw
+                                "Total" => $lineTotal,
+                                "Total_btw" => $lineTotalBtw
                             );
-                            array_push($order_lines_data, $itemCat);
+                            array_push($orderLinesData, $itemCat);
                         }
-
-                        // Since a product can be in multiple categories, add each one seperately to this
-                        // foreach ($categories as $seperate_category) {
-                        //     $itemCat = array(
-                        //         "Category" => $seperate_category->name,
-                        //         "CategoryID" => $seperate_category->term_id,
-                        //         "Name" => $product_name,
-                        //         "Description" => $description,
-                        //         "Quantity" => $quantity,
-                        //         "Total" => $line_total,
-                        //         "Total_btw" => $line_total_btw
-                        //     );
-                        //     array_push($order_lines_data, $itemCat);
-                        // }
-                    }
-                    else{
-                        $itemCat = array(
+                    } else {
+                        // In case product has been deleted
+                        array_push($orderLinesData, [
                             "Category" => "Product verwijderd",
                             "CategoryID" => "Product verwijderd",
-                            "Name" => $product_name,
+                            "Afdeling" => "Product verwijderd",
+                            "Name" => $productName,
                             "Description" => "Product verwijderd",
                             "Quantity" => $quantity,
-                            "Total" => $line_total,
-                            "Total_btw" => $line_total_btw
-                        );
-                        array_push($order_lines_data, $itemCat);
+                            "Total" => $lineTotal,
+                            "Total_btw" => $lineTotalBtw
+                        ]);
                     }
                 }
             }
 
-            // Create a basic array for the excel
-            $result = array(array('name' => '<b>Verkopen per product Webshop</b>'));
-            array_push($result, array('name' => '', 'description' => ''));
-            array_push($result, array('name' => '<b>Bedrijfsnaam</b>', 'description' => 'Kringloopbedrijf Het Warenhuis'));
-            array_push($result, array('name' => '<b>KvK-nummer</b>', 'description' => '64643069'));
-            array_push($result, array('name' => '<b>Periode:</b>', 'description' => (new DateTime($date_start))->format('d-m-Y') . ' - ' . (new DateTime($date_end))->format('d-m-Y')));
-            array_push($result, array('name' => '', 'description' => ''));
-            array_push($result, array('name' => '<b>Artikel</b>', 'description' => '<b>Variant</b>','category' => '<b>Categorie</b>','quantity' => '<b>Hoeveelheid</b>', 'total' => '<b>Totaal (ex BTW)</b>', 'total_btw' => '<b>BTW</b>', 'total_all' => '<b>Totaal (incl BTW)</b>'));
 
-            // Loop over the just gotten data to get it in the format the excel wants
-            foreach ($order_lines_data as $order_line_data) {                
-                $categoryID = $order_line_data['CategoryID'];
-                $categoryName = $order_line_data['Category'];
-                $productName = $order_line_data['Name'];
-                $orderLineQuantity = $order_line_data['Quantity'];
-                $orderLineTotal = $order_line_data['Total'];
-                $orderLineTotalBtw = $order_line_data['Total_btw'];
-                $orderLineDescription = $order_line_data['Description'];
+            // Prepare base structure for the excel
+            $basicArray = [
+                ['name' => '<b>Verkopen per product Webshop</b>'],
+                ['name' => '', 'description' => ''],
+                ['name' => '<b>Bedrijfsnaam</b>', 'description' => 'Kringloopbedrijf Het Warenhuis'],
+                ['name' => '<b>KvK-nummer</b>', 'description' => '64643069'],
+                ['name' => '<b>Periode:</b>', 'description' => (new DateTime($dateStart))->format('d-m-Y') . ' - ' . (new DateTime($dateEnd))->format('d-m-Y')],
+                ['name' => '', 'description' => ''],
+                [
+                    'name' => '<b>Artikel</b>', 'description' => '<b>Variant</b>', 'category' => '<b>Afdeling</b>',
+                    'quantity' => '<b>Hoeveelheid</b>',
+                    'total' => '<b>Totaal (ex BTW)</b>',
+                    'total_btw' => '<b>BTW</b>',
+                    'total_all' => '<b>Totaal (incl BTW)</b>'
+                ],
+            ];
+
+            $result = array_merge($result, $basicArray);
+
+            var_dump($orderLinesData);
+            // Loop through the order lines data
+            foreach ($orderLinesData as $orderLineData) {
+                $categoryID = $orderLineData['CategoryID'];
+                $categoryName = $orderLineData['Category'];
+                $afdeling = $orderLineData['Afdeling'];
+                $productName = $orderLineData['Name'];
+                $orderLineQuantity = $orderLineData['Quantity'];
+                $orderLineTotal = $orderLineData['Total'];
+                $orderLineTotalBtw = $orderLineData['Total_btw'];
+                $orderLineDescription = $orderLineData['Description'];
 
                 $total_all = $orderLineTotal + $orderLineTotalBtw;
                 $quantity_all = $quantity_all + $orderLineQuantity;
@@ -402,104 +409,107 @@ class SharkGetStats {
                 $total_btw = $total_btw + $orderLineTotalBtw;
                 $total_incl_btw = $total_incl_btw + $total_all;
 
-                $row_key = array_search($productName, array_column($result, 'name'));
-                if ($row_key !== false) {
-                $row = $result[$row_key];
+
+                // Use product name map instead of costly array search
+                $rowKey = array_search($productName, array_column($result, 'name'));
+                if ($rowKey !== false) {
+                    $row = $result[$rowKey];
                     // Sum up the quantity and total of what's already in the array and what we currently have in $order_line_data
-                    $row['quantity'] = $row['quantity'] + $orderLineQuantity;
+                    $row['quantity'] += $orderLineQuantity;
                     $row['total'] = number_format($row['total'] + $orderLineTotal, 2);
                     $row['total_btw'] = number_format($row['total_btw'] + $orderLineTotalBtw, 2);
                     $row['total_all'] = number_format($row['total_all'] + $total_all, 2);
 
                     // Add the new totals back to the resultset
-                    $result[$row_key] = $row;
+                    $result[$rowKey] = $row;
                 } else {
-                    $parentcategory = "";
+                    // Assume get_ancestors() returns an array; get the last category parent
                     $categoryParents = get_ancestors($categoryID, 'product_cat');
-                    foreach($categoryParents as $parentcat){
-                        $parentcategory = $parentcat;
-                    }
-                    array_push($result, array(
+                    $parentCategory = end($categoryParents);
+
+                    // Push new row to result array
+                    $result[] = [
                         //'date' => $order_date,
                         'name' => $productName,
                         'category' => $categoryName,
-                        'description' => $this->get_product_category_by_id($parentcategory),
+                        'afdeling' => $afdeling,
+                        //'description' => $this->get_product_category_by_id($parentCategory),
                         'quantity' => $orderLineQuantity,
                         'total' => number_format($orderLineTotal, 2),
                         'total_btw' => number_format($orderLineTotalBtw, 2),
                         'total_all' => number_format($total_all, 2),
-                    )); 
+                    ];
                 }
             }
 
-            // Write the results to the array called results (our main array)
-            array_push($result, array());
-            array_push($result, array('name' => '', 'description' => '','category' => '','quantity' => number_format($quantity_all, 0), 'total' => number_format($total_ex_btw, 2), 'total_btw' => number_format($total_btw, 2), 'total_all' => number_format($total_incl_btw, 2)));
-            array_push($result, array('name' => '<hr>'));
-            array_push($result, array('name' => '<b>Verzendkosten</b>', 'description' => $total_shipping));
-            array_push($result, array('name' => '<hr>'));
-            array_push($result, array('name' => '<b>Cadeaubonnen</b>'));
-            array_push($result, array('name' => '<b>Naam</b>', 'description' => '<b>Datum</b>','category' => '','quantity' => '', 'total' => '<b>Totaal (ex BTW)</b>', 'total_btw' => '<b>BTW</b>', 'total_all' => '<b>Totaal (incl BTW)</b>'));
+            // Function to add an element to result array
+            function addToResult(&$resultArray, $element)
+            {
+                $resultArray[] = $element;
+            }
+
+            // Add each new element to the result array
+            addToResult($result, []);
+            addToResult($result, [
+                'name' => '',
+                'description' => '',
+                'afdeling' => '',
+                'quantity' => number_format($quantity_all, 0),
+                'total' => number_format($total_ex_btw, 2),
+                'total_btw' => number_format($total_btw, 2),
+                'total_all' => number_format($total_incl_btw, 2)
+            ]);
+            addToResult($result, ['name' => '<hr>']);
+            addToResult($result, ['name' => '<b>Verzendkosten</b>', 'description' => $totalShipping]);
+            addToResult($result, ['name' => '<hr>']);
+            addToResult($result, ['name' => '<b>Cadeaubonnen</b>']);
+            addToResult($result, [
+                'name' => '<b>Naam</b>',
+                'description' => '<b>Datum</b>',
+                'afdeling' => '',
+                'quantity' => '',
+                'total' => '<b>Totaal (ex BTW)</b>',
+                'total_btw' => '<b>BTW</b>',
+                'total_all' => '<b>Totaal (incl BTW)</b>'
+            ]);
+
             foreach ($coupons as $coupon) {
-                //var_dump($coupon);
-                //array_push($result, array('name' => $coupon->get_code(), 'description' => $coupon->get_discount()));
-                array_push($result, array(
+                addToResult($result, [
                     'name' => $coupon->get_code(),
                     'description' => $coupon->get_order()->get_date_created(),
-                    'category' => '',
+                    'afdeling' => '',
                     'quantity' => '',
                     'total' => $coupon->get_discount(),
                     'total_btw' => $coupon->get_discount_tax(),
                     'total_all' => $coupon->get_discount() + $coupon->get_discount_tax()
-                    ));
-                }
-            
-            //var_dump($result);
+                ]);
+            }
 
-            // Save the excel to the filesystem
-            $path = getcwd() ."/Omzet CW ".$date_start.' - '.$date_end.".xlsx";
+
+            // Save the excel file
+            $path = getcwd() . "/Omzet CW " . $dateStart . ' - ' . $dateEnd . ".xlsx";
             SimpleXLSXGen::fromArray($result)->saveAs($path);
 
-            var_dump($path);
-
-            // Retrieve the emails from the report-emails-name option
+            // Retrieve the emails
             $multiple_recipients_weekly = explode(",", get_option('report-emails-weekly-name'));
-
-            // Retrieve the emails from the report-emails-name option
             $multiple_recipients_monthly = explode(",", get_option('report-emails-monthly-name'));
 
-            // email the csv
-            //$multiple_recipients = array(
-            //    'r.bos@kringloopwarenhuis.nl',
-            //    'y.schoenmaker@kringloopwarenhuis.nl'
-            //);
+            // Send the email
+            wp_mail(
+                $reportEmails,
+                'Omzet CW Webshop: ' . $dateStart . ' - ' . $dateEnd,
+                'Omzet CW Webshop: ' . $dateStart . ' - ' . $dateEnd,
+                '',
+                [$path]
+            );
 
-            var_dump($report_emails);
+            // Save the file again
+            SimpleXLSXGen::fromArray($result)->saveAs(getcwd() . "/Omzet CW " . $dateStart . ' - ' . $dateEnd . ".xlsx");
 
-            var_dump(wp_mail( 
-            $report_emails,                                     // To
-            'Omzet CW Webshop: '.$date_start.' - '.$date_end,   // Subject
-            'Omzet CW Webshop: '.$date_start.' - '.$date_end,   // Body
-            '',                                                 // Headers
-            array($path)));                                     // Attachments
-            
-            // close temp file
-            SimpleXLSXGen::fromArray($result)->saveAs(getcwd() . "/Omzet CW ".$date_start.' - '.$date_end.".xlsx"); // or downloadAs('books.xlsx') or $xlsx_content = (string) $xlsx 
-
-            // Disable this to get log
-            //-------------------------
-            // wp_safe_redirect(
-            //         // Retrieves the site url for the current site.
-            //         add_query_arg( 
-            //             array( 
-            //                 'success' => '1'
-            //             ), 
-            //             site_url( '/wp-admin/admin.php?page=shark-report' )
-            //     )
-            // );
             exit();
-            
-            die;
+
+
+            return createExcelReport($result);
         }
     }
 
@@ -507,16 +517,18 @@ class SharkGetStats {
     //     $term_list = wp_get_post_terms($category_id, 'product_cat', array('fields' => 'ids'));
     //     return $term_list;
     //   }
-    function get_product_category_by_id( $category_id ) {
+    function get_product_category_by_id($category_id)
+    {
         //echo("get_product_category_by_id got called");
-        $term = get_term_by( 'id', $category_id, 'product_cat', 'ARRAY_A' );
+        $term = get_term_by('id', $category_id, 'product_cat', 'ARRAY_A');
         if ($term == false) {
             return '';
-          }
+        }
         //echo("get_product_category_by_id got called");
         return $term['name'];
-      }
-    public function shark_calc_get_all_coupons_action(){
+    }
+    public function shark_calc_get_all_coupons_action()
+    {
         $order = wc_get_order(9276);
 
         // Get coupons by orderimage.png
@@ -527,13 +539,12 @@ class SharkGetStats {
             $coupon_post = get_post((WC()->version < '2.7.0') ? $coupon->id : $coupon->get_id());
             $discount_amount = !empty($coupon_item['discount_amount']) ? $coupon_item['discount_amount'] : 0;
             $coupon_items[] = implode('|', array(
-                    'code:' . $coupon_item['name'],
-                    'description:' . ( is_object($coupon_post) ? $coupon_post->post_excerpt : '' ),
-                    'amount:' . wc_format_decimal($discount_amount, 2),
+                'code:' . $coupon_item['name'],
+                'description:' . (is_object($coupon_post) ? $coupon_post->post_excerpt : ''),
+                'amount:' . wc_format_decimal($discount_amount, 2),
             ));
 
             var_dump($coupon);
         }
     }
-
 }
