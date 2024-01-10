@@ -302,14 +302,12 @@ class SharkGetStats
             $totalInclBtw = 0;
             $coupons = array();
 
-
             // Added: Initialize these variables before using them
             $result = array();
             $quantity_all = 0;
             $total_ex_btw = 0;
             $total_btw = 0;
             $total_incl_btw = 0;
-            var_dump(count($orders));
 
             foreach ($orders as $orderId) {
                 $order = wc_get_order($orderId); // Get the order by id
@@ -328,6 +326,10 @@ class SharkGetStats
 
                     // Instance of the WC_Product object
                     $product = $orderLine->get_product();
+                    $variation_id = $product->get_variation_id();
+                    if ($variation_id) {
+                        $variation = get_the_title($variation_id);
+                    }
 
                     if ($product) {
                         $afdeling = $product->get_attribute("Afdeling");
@@ -345,7 +347,8 @@ class SharkGetStats
                             // Information of item category-wise
                             $itemCat = array(
                                 "Category" => $separateCategory->name,
-                                "CategoryID" => $separateCategory->term_id,
+                                //"CategoryID" => $separateCategory->term_id,
+                                "Variation" => $variation,
                                 "Afdeling" => $afdeling,
                                 "Name" => $productName,
                                 "Description" => $description,
@@ -381,7 +384,7 @@ class SharkGetStats
                 ['name' => '<b>Periode:</b>', 'description' => (new DateTime($dateStart))->format('d-m-Y') . ' - ' . (new DateTime($dateEnd))->format('d-m-Y')],
                 ['name' => '', 'description' => ''],
                 [
-                    'name' => '<b>Artikel</b>', 'description' => '<b>Variant</b>', 'category' => '<b>Afdeling</b>',
+                    'name' => '<b>Artikel</b>', 'description' => '<b>Variatie</b>', 'variation' => '<b>Afdeling</b>',
                     'quantity' => '<b>Hoeveelheid</b>',
                     'total' => '<b>Totaal (ex BTW)</b>',
                     'total_btw' => '<b>BTW</b>',
@@ -389,13 +392,13 @@ class SharkGetStats
                 ],
             ];
 
-            $result = array_merge($result, $basicArray);
+            $result = array_merge($result,  $basicArray);
 
-            var_dump($orderLinesData);
             // Loop through the order lines data
             foreach ($orderLinesData as $orderLineData) {
                 $categoryID = $orderLineData['CategoryID'];
                 $categoryName = $orderLineData['Category'];
+                $variantName = $orderLineData['Variation'];
                 $afdeling = $orderLineData['Afdeling'];
                 $productName = $orderLineData['Name'];
                 $orderLineQuantity = $orderLineData['Quantity'];
@@ -431,7 +434,7 @@ class SharkGetStats
                     $result[] = [
                         //'date' => $order_date,
                         'name' => $productName,
-                        'category' => $categoryName,
+                        'category' => $variantName,
                         'afdeling' => $afdeling,
                         //'description' => $this->get_product_category_by_id($parentCategory),
                         'quantity' => $orderLineQuantity,
@@ -506,10 +509,11 @@ class SharkGetStats
             // Save the file again
             SimpleXLSXGen::fromArray($result)->saveAs(getcwd() . "/Omzet CW " . $dateStart . ' - ' . $dateEnd . ".xlsx");
 
+            wp_safe_redirect(admin_url('admin.php?page=shark-report'));
             exit();
 
 
-            return createExcelReport($result);
+            //return createExcelReport($result);
         }
     }
 
@@ -543,8 +547,6 @@ class SharkGetStats
                 'description:' . (is_object($coupon_post) ? $coupon_post->post_excerpt : ''),
                 'amount:' . wc_format_decimal($discount_amount, 2),
             ));
-
-            var_dump($coupon);
         }
     }
 }
