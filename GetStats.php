@@ -384,7 +384,7 @@ class SharkGetStats
                 ['name' => '<b>Periode:</b>', 'description' => (new DateTime($dateStart))->format('d-m-Y') . ' - ' . (new DateTime($dateEnd))->format('d-m-Y')],
                 ['name' => '', 'description' => ''],
                 [
-                    'name' => '<b>Artikel</b>', 'description' => '<b>Variatie</b>', 'variation' => '<b>Afdeling</b>',
+                    'name' => '<b>Artikel</b>', 'description' => '<b>Variatie</b>', 'variation' => '<b>Categorie</b>',
                     'quantity' => '<b>Hoeveelheid</b>',
                     'total' => '<b>Totaal (ex BTW)</b>',
                     'total_btw' => '<b>BTW</b>',
