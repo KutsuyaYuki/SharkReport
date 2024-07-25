@@ -7,37 +7,35 @@
    Author: Yuki Schoenmaker
    Author URI: http://www.blahaj.nl
    License: GPL2
-*/
-
-require_once("GetStats.php");
-require_once("SharkReport-Settings.php");
-require_once("shark-cron-manager.php");
-require_once("SimpleXLSXGen.php");
+   */
+include_once("GetStats.php");
+include_once("SharkReport-Settings.php");
+include_once("shark-cron-manager.php");
+include_once("SimpleXLSXGen.php");
 
 class SharkReport
 {
-	private $shark_getstats;
-	private $settings;
-	private $cron_manager;
 
 	/**
 	 * This method will be run on plugin activation.
 	 *
 	 * @since  1.0.0
 	 */
-	public static function activation(): void
+	public static function activation()
 	{
+		// Setup Cron.
 		$cron_manager = new Shark_Cron_Manager();
 		$cron_manager->setup_cron();
 	}
 
 	/**
-	 * This method will run on plugin deactivation.
+	 * This method wil run on plugin deactivation.
 	 *
 	 * @since  1.0.0
 	 */
-	public static function deactivation(): void
+	public static function deactivation()
 	{
+		// Remove Cron.
 		$cron_manager = new Shark_Cron_Manager();
 		$cron_manager->remove_cron();
 	}
@@ -49,6 +47,7 @@ class SharkReport
 	 */
 	public function __construct()
 	{
+		// Check if WC is activated.
 		if ($this->is_wc_active()) {
 			$this->init();
 		}
@@ -60,27 +59,17 @@ class SharkReport
 	 * @since  1.0.0
 	 * @return bool
 	 */
-	private function is_wc_active(): bool
+	private function is_wc_active()
 	{
+
 		$is_active = class_exists('WooCommerce');
 
-		if (!$is_active) {
-			add_action('admin_notices', [$this, 'notice_activate_wc']);
+		// Do the WC active check.
+		if (false === $is_active) {
+			add_action('admin_notices', array($this, 'notice_activate_wc'));
 		}
 
 		return $is_active;
-	}
-
-	/**
-	 * Display notice to activate WooCommerce.
-	 */
-	public function notice_activate_wc(): void
-	{
-?>
-		<div class="notice notice-error">
-			<p><?php _e('Shark Report requires WooCommerce to be active.', 'shark-report'); ?></p>
-		</div>
-<?php
 	}
 
 	/**
@@ -88,45 +77,35 @@ class SharkReport
 	 *
 	 * @since  1.0.0
 	 */
-	private function init(): void
+	private function init()
 	{
-		$this->shark_getstats = new SharkGetStats();
-		$this->cron_manager = new Shark_Cron_Manager();
 
-		$this->add_admin_actions();
+		$shark_getstats = new SharkGetStats();
 
+		add_action('admin_post_shark_calc_all', array($shark_getstats, 'shark_calc_all_action'));
+		add_action('admin_post_shark_calc_weekly_now', array($shark_getstats, 'shark_calc_all_action_weekly_now'));
+		add_action('admin_post_shark_calc_monthly_now', array($shark_getstats, 'shark_calc_all_action_monthly_now'));
+		// add_action('admin_post_shark_calc_get_all_coupons', array($shark_getstats, 'shark_calc_get_all_coupons_action'));
+
+		// Only load in admin.
 		if (is_admin()) {
-			$this->settings = new SharkReport_Settings();
-			$this->settings->setup();
+
+			// Setup the settings.
+			$settings = new SharkReport_Settings();
+			$settings->setup();
 		}
 
-		$this->add_cron_actions();
-	}
-
-	/**
-	 * Add admin actions.
-	 */
-	private function add_admin_actions(): void
-	{
-		add_action('admin_post_shark_calc_all', [$this->shark_getstats, 'shark_calc_all_action']);
-		add_action('admin_post_shark_calc_weekly_now', [$this->shark_getstats, 'shark_calc_all_action_weekly_now']);
-		add_action('admin_post_shark_calc_monthly_now', [$this->shark_getstats, 'shark_calc_all_action_monthly_now']);
-	}
-
-	/**
-	 * Add cron actions.
-	 */
-	private function add_cron_actions(): void
-	{
-		add_action(Shark_Cron_Manager::CRON_HOOK_WEEKLY, [$this->shark_getstats, 'shark_calc_all_action_weekly']);
-		add_action(Shark_Cron_Manager::CRON_HOOK_MONTHLY, [$this->shark_getstats, 'shark_calc_all_action_monthly']);
+		// Cron hook.
+		//add_action( Shark_Cron_Manager::CRON_HOOK_MINUTE, array( $shark_getstats, 'shark_calc_all_action_weekly' ) );
+		add_action(Shark_Cron_Manager::CRON_HOOK_WEEKLY, array($shark_getstats, 'shark_calc_all_action_weekly'));
+		add_action(Shark_Cron_Manager::CRON_HOOK_MONTHLY, array($shark_getstats, 'shark_calc_all_action_monthly'));
 	}
 }
 
 /**
  * Initialize plugin.
  */
-function SharkReport_main_init(): void
+function SharkReport_main_init()
 {
 	new SharkReport();
 }
@@ -135,7 +114,7 @@ function SharkReport_main_init(): void
 add_action('plugins_loaded', 'SharkReport_main_init');
 
 // Activation hook.
-register_activation_hook(__FILE__, [SharkReport::class, 'activation']);
+register_activation_hook(__FILE__, array('SharkReport', 'activation'));
 
 // Deactivation hook.
-register_deactivation_hook(__FILE__, [SharkReport::class, 'deactivation']);
+register_deactivation_hook(__FILE__, array('SharkReport', 'deactivation'));

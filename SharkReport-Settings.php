@@ -1,120 +1,136 @@
 <?php
 class SharkReport_Settings
 {
-    public function setup(): void
+    public function setup()
     {
-        add_action('admin_menu', [$this, 'shark_report_add_plugin_page']);
-        add_action('admin_init', [$this, 'shark_report_page_init']);
-        add_action('admin_notices', [$this, 'shark_admin_notice']);
+
+        add_action('admin_menu', array($this, 'shark_report_add_plugin_page'));
+        add_action('admin_init', array($this, 'shark_report_page_init'));
+        add_action('admin_notices', array($this, 'shark_admin_notice'));
     }
 
-    public function shark_admin_notice(): void
+    // display custom admin notice
+    function shark_admin_notice()
     {
+
         $screen = get_current_screen();
 
-        if ($screen->id === 'toplevel_page_shark-report' && isset($_GET['success'])) {
-            $this->display_admin_notice($_GET['success']);
+        if ($screen->id === 'toplevel_page_shark-report') {
+
+            if (isset($_GET['success'])) {
+
+                if ($_GET['success'] === '1') : ?>
+
+                    <div class="notice notice-success is-dismissible">
+                        <p><?php _e('Success!', 'bbb'); ?></p>
+                    </div>
+
+                <?php else : ?>
+
+                    <div class="notice notice-error is-dismissible">
+                        <p><?php _e('Something went wrong :c.', 'bbb'); ?></p>
+                    </div>
+
+        <?php endif;
+            }
         }
     }
 
-    private function display_admin_notice(string $success): void
-    {
-        $message = $success === '1' ? 'Success!' : 'Something went wrong :c.';
-        $class = $success === '1' ? 'notice-success' : 'notice-error';
-?>
-        <div class="notice <?php echo esc_attr($class); ?> is-dismissible">
-            <p><?php echo esc_html($message); ?></p>
-        </div>
-    <?php
-    }
 
-    public function shark_report_add_plugin_page(): void
+    public function shark_report_add_plugin_page()
     {
         add_menu_page(
-            'Shark Report',
-            'Shark Report',
-            'manage_options',
-            'shark-report',
-            [$this, 'shark_report_create_admin_page'],
-            'dashicons-redo',
-            2
+            'Shark Report', // page_title
+            'Shark Report', // menu_title
+            'manage_options', // capability
+            'shark-report', // menu_slug
+            array($this, 'shark_report_create_admin_page'), // function
+            'dashicons-redo', // icon_url
+            2 // position
         );
 
-        $this->register_settings();
-    }
-
-    private function register_settings(): void
-    {
         register_setting('sharkreport-settings', 'report-emails-weekly-name');
         register_setting('sharkreport-settings', 'report-emails-monthly-name');
     }
 
-    private function get_category_list(): array
+    private function get_category_list()
     {
-        $category_tree = [];
+        $category_tree = array();
 
-        $parent_categories = get_terms([
+        // Retrieve all parent terms (top-level categories).
+        $parent_categories = get_terms(array(
             'taxonomy' => 'product_cat',
             'hide_empty' => false,
             'parent' => 0
-        ]);
+        ));
 
-        foreach ($parent_categories as $parent_category) {
-            $child_categories = get_terms([
+        foreach ($parent_categories as $pcategory) {
+            // Get child terms.
+            $child_args = array(
                 'taxonomy' => 'product_cat',
                 'hide_empty' => false,
-                'parent' => $parent_category->term_id
-            ]);
+                'parent' => $pcategory->term_id
+            );
 
+            $child_categories = get_terms($child_args);
+
+            // To store children with their names.
             $children = array_map(function ($term) {
                 return ['id' => $term->term_id, 'name' => $term->name];
             }, $child_categories);
 
+            // Add Parent category along with its children to tree.
             $category_tree[] = [
-                "id"     => $parent_category->term_id,
-                "name"   => $parent_category->name,
-                "slug"   => $parent_category->slug,
+                "id"     => $pcategory->term_id,
+                "name"   => $pcategory->name,
+                "slug"   => $pcategory->slug,
                 "children" => $children
             ];
         }
 
-        return $category_tree;
+        return  $category_tree;
     }
-
-    public function display_category_list(): void
+    public function display_category_list()
     {
-        $category_tree = $this->get_category_list();
+        $category_tree = $this->get_category_list(); // Use the get_category_list method to fetch the categories.
 
+        // Start the table
         echo '<table>';
-        echo '<tr><th>ID</th><th>Name</th><th>Slug</th></tr>';
+        echo '<tr><th>ID</th><th>Name</th><th>Slug</th></tr>'; // Header row
 
+        // Loop through each category and create a row in the table
         foreach ($category_tree as $parent_category) {
             echo '<tr>';
             echo '<td>' . esc_html($parent_category['id']) . '</td>';
             echo '<td>' . esc_html($parent_category['name']) . '</td>';
             echo '<td>' . esc_html($parent_category['slug']) . '</td>';
+
             echo '</tr>';
         }
 
+        // Close the table
         echo '</table>';
     }
 
-    private function print_category_hierarchy(array $categories): void
+    // A recursive function to print Category Hierarchy HTML
+    private function print_category_hierarchy($categories)
     {
         echo '<ul>';
-        foreach ($categories as $category) {
+        foreach ($categories as    $category) {
             echo '<li>' . esc_html(ucfirst(strtolower($category['name'])));
             if (!empty($category['children'])) {
-                $this->print_category_hierarchy($category['children']);
+                $this->print_category_hierarchy($category['children']); // If there are children go deeper
             }
         }
         echo '</ul></li>';
     }
 
-    public function shark_report_create_admin_page(): void
+
+
+    public function shark_report_create_admin_page()
     {
-        $this->shark_report_options = get_option('shark_report_option_name');
-    ?>
+        $this->shark_report_options = get_option('shark_report_option_name'); ?>
+
         <div class="wrap">
             <h2>Shark Report Settings</h2>
             <p>
@@ -123,92 +139,98 @@ class SharkReport_Settings
             <?php settings_errors(); ?>
 
             <form method="post" action="options.php">
-                <?php
-                settings_fields('sharkreport-settings');
-                $this->display_settings_fields();
-                submit_button();
+
+                <?php settings_fields('sharkreport-settings'); //Is where we save it in the DB 
                 ?>
+
+                <table class="form-table">
+                    <tr>
+                        <td>
+                            <label for="report-emails-id">Emails Weekly:</label>
+                        </td>
+                        <td>
+                            <input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-weekly-id" name="report-emails-weekly-name" value="<?php echo get_option('report-emails-weekly-name'); //Gets setting from DB 
+                                                                                                                                                                                    ?>">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="report-emails-id">Emails Monthly:</label>
+                        </td>
+                        <td>
+                            <input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-monthly-id" name="report-emails-monthly-name" value="<?php echo get_option('report-emails-monthly-name'); //Gets setting from DB 
+                                                                                                                                                                                        ?>">
+                        </td>
+                    </tr>
+                </table>
+
+                <?php submit_button(); ?>
+
             </form>
 
+            <p>
             <h3>Aangepaste uitdraai</h3>
+            </p>
 
             <?php
             echo "<section id='shark-report-category-list'>";
             echo "<h2>Select Category</h2>";
+
+            // Output Category dropdown
             $this->display_category_list();
+
             echo "</section>";
-
-            $this->display_custom_report_form();
-            $this->display_action_buttons();
-            $this->display_test_functions();
             ?>
+
+            <form action="<?php echo admin_url('admin-post.php'); ?>">
+                <input type="hidden" name="action" value="shark_calc_all">
+
+                <table class="form-table">
+                    <tr>
+                        <td>
+                            <label for="report-emails-aangepast-id">Emails Aangepast:</label>
+                        </td>
+                        <td>
+                            <input type="textarea" width="100px" height="100px" rows="10" class="regular-text" id="report-emails-aangepast-id" name="report-emails-aangepast-name" value="<?php echo get_option('report-emails-aangepast-name'); //Gets setting from DB 
+                                                                                                                                                                                            ?>">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="report-emails-id">Begin:</label>
+                        </td>
+                        <td>
+                            <input type="date" width="100px" height="100px" rows="10" id="date-start" name="date-start">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="report-emails-id">Eind:</label>
+                        </td>
+                        <td>
+                            <input type="date" width="100px" height="100px" rows="10" id="date-end" name="date-end">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <?php submit_button('Send'); ?>
+                        </td>
+                    </tr>
+                </table>
+            </form>
         </div>
-    <?php
-    }
 
-    private function display_settings_fields(): void
-    {
-    ?>
-        <table class="form-table">
-            <?php $this->display_email_field('Weekly', 'report-emails-weekly-name'); ?>
-            <?php $this->display_email_field('Monthly', 'report-emails-monthly-name'); ?>
-        </table>
-    <?php
-    }
-
-    private function display_email_field(string $label, string $option_name): void
-    {
-    ?>
-        <tr>
-            <td><label for="<?php echo esc_attr($option_name); ?>">Emails <?php echo esc_html($label); ?>:</label></td>
-            <td>
-                <input type="text" class="regular-text" id="<?php echo esc_attr($option_name); ?>" name="<?php echo esc_attr($option_name); ?>" value="<?php echo esc_attr(get_option($option_name)); ?>">
-            </td>
-        </tr>
-    <?php
-    }
-
-    private function display_custom_report_form(): void
-    {
-    ?>
-        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-            <input type="hidden" name="action" value="shark_calc_all">
-            <table class="form-table">
-                <?php $this->display_email_field('Aangepast', 'report-emails-aangepast-name'); ?>
-                <?php $this->display_date_field('Begin', 'date-start'); ?>
-                <?php $this->display_date_field('Eind', 'date-end'); ?>
-                <tr>
-                    <td><?php submit_button('Send'); ?></td>
-                </tr>
-            </table>
-        </form>
-    <?php
-    }
-
-    private function display_date_field(string $label, string $field_name): void
-    {
-    ?>
-        <tr>
-            <td><label for="<?php echo esc_attr($field_name); ?>"><?php echo esc_html($label); ?>:</label></td>
-            <td><input type="date" id="<?php echo esc_attr($field_name); ?>" name="<?php echo esc_attr($field_name); ?>"></td>
-        </tr>
-    <?php
-    }
-
-    private function display_action_buttons(): void
-    {
-    ?>
         <table>
             <tbody>
                 <tr>
                     <td>
-                        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <form action="<?php echo admin_url('admin-post.php'); ?>">
                             <input type="hidden" name="action" value="shark_calc_weekly_now">
                             <?php submit_button('Week'); ?>
                         </form>
                     </td>
                     <td>
-                        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <form action="<?php echo admin_url('admin-post.php'); ?>">
                             <input type="hidden" name="action" value="shark_calc_monthly_now">
                             <?php submit_button('Maand'); ?>
                         </form>
@@ -216,28 +238,45 @@ class SharkReport_Settings
                 </tr>
             </tbody>
         </table>
-    <?php
-    }
 
-    private function display_test_functions(): void
-    {
-    ?>
+        <p>
         <h3>Test functions</h3>
-        <form action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+        </p>
+
+        <form action="<?php echo admin_url('admin-post.php'); ?>">
             <input type="hidden" name="action" value="shark_calc_get_all_coupons">
+
             <table class="form-table">
-                <?php $this->display_date_field('Begin', 'date-start'); ?>
-                <?php $this->display_date_field('Eind', 'date-end'); ?>
                 <tr>
-                    <td><?php submit_button('Send'); ?></td>
+                    <td>
+                        <label for="report-emails-id">Begin:</label>
+                    </td>
+                    <td>
+                        <input type="date" width="100px" height="100px" rows="10" id="date-start" name="date-start">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="report-emails-id">Eind:</label>
+                    </td>
+                    <td>
+                        <input type="date" width="100px" height="100px" rows="10" id="date-end" name="date-end">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <?php submit_button('Send'); ?>
+                    </td>
                 </tr>
             </table>
         </form>
-<?php
-    }
+        </div>
 
-    public function shark_report_page_init(): void
+<?php }
+
+    public function shark_report_page_init()
     {
-        // This method is intentionally left empty
     }
 }
+
+?>
