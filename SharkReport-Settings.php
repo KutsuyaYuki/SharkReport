@@ -172,16 +172,6 @@ class SharkReport_Settings
             <h3>Aangepaste uitdraai</h3>
             </p>
 
-            <?php
-            echo "<section id='shark-report-category-list'>";
-            echo "<h2>Select Category</h2>";
-
-            // Output Category dropdown
-            $this->display_category_list();
-
-            echo "</section>";
-            ?>
-
             <form action="<?php echo admin_url('admin-post.php'); ?>">
                 <input type="hidden" name="action" value="shark_calc_all">
 
